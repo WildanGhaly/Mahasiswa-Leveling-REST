@@ -1,0 +1,9 @@
+version: '3.3'
+services:
+  mhslvl-rest:
+    build: 
+      dockerfile: Dockerfile
+    ports:
+      - "6379:6379"
+    env_file:
+      - .env
