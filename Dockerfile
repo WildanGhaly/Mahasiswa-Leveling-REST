@@ -1,11 +1,15 @@
-FROM node:16.17.0
+FROM node:14
 
 WORKDIR /app
 
-COPY . .
+COPY package.json .
 
 RUN npm install
 
-EXPOSE 6379
+COPY . .
 
-CMD [ "npm", "run", "start" ]
+EXPOSE 8080
+
+VOLUME [ "/app/node_modules" ]
+
+CMD ["npm", "run", "dev"]

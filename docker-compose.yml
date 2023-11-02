@@ -1,9 +1,22 @@
-version: '3.3'
-services:
+version: "3.8"
+
+services: 
   mhslvl-rest:
     build: 
+      context: .
       dockerfile: Dockerfile
-    ports:
-      - "6379:6379"
+    ports: 
+      - 8080:8080
+    volumes: 
+      - .:/app
+      - '/app/node_modules'
+    depends_on: 
+      - mhslvl-rest-db
+  
+  mhslvl-rest-db:
+    image: mysql:8.0
     env_file:
       - .env
+    volumes:
+      - ./db:/docker-entrypoint-initdb.d
+    
