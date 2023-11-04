@@ -4,6 +4,16 @@ const cors = require('cors');
 const express = require('express')
 const app = express()
 const jwt = require('jsonwebtoken')
+const mysql = require('mysql2');
+
+const mysqlConfig = {
+  host: process.env.DB_HOST,
+  user: process.env.MYSQL_USER,
+  password: process.env.MYSQL_PASSWORD,
+  database: process.env.MYSQL_DATABASE
+};
+
+let con = null;
 
 app.use(express.json())
 app.use(cors());
@@ -39,21 +49,38 @@ function authenticateToken(req, res, next) {
   })
 }
 
+// respond with "hello world" when a GET request is made to the homepage
+app.get('/', function (req, res) {
+  res.send('hello world')
+})
+
+app.get('/connect', function (req, res) {
+  con =  mysql.createConnection(mysqlConfig);
+  con.connect(function(err) {
+    if (err) throw err;
+    res.send('connected')
+  });
+})
+
 // Endpoint for login
 app.post('/login', (req, res) => {
   // Authenticate User
   const username = req.body.username
-  const user = { name: username }
+  const password = req.body.password
 
-  const accessToken = generateAccessToken(user)
-  const refreshToken = jwt.sign(user, process.env.REFRESH_TOKEN_SECRET)
-  refreshTokens.push(refreshToken)
-
-  if (user != null) {
-    res.json({ accessToken: accessToken, refreshToken: refreshToken, user: user })
-  } else {
-    res.sendStatus(401)
-  }
+  con.query('SELECT * FROM users WHERE username = ? AND password = ?', [username, password], function (err, result, fields) {
+    if (err) throw err;
+    console.log(result);
+    if (result.length > 0) {
+      const user = { name: username }
+      const accessToken = generateAccessToken(user)
+      const refreshToken = jwt.sign(user, process.env.REFRESH_TOKEN_SECRET)
+      refreshTokens.push(refreshToken)
+      res.json({ accessToken: accessToken, refreshToken: refreshToken, user: user })
+    } else {
+      res.sendStatus(401)
+    }
+  }); 
 })
 
 // Endpoint to refresh token
