@@ -49,17 +49,21 @@ function authenticateToken(req, res, next) {
   })
 }
 
+function connect() {
+  try {
+    con =  mysql.createConnection(mysqlConfig);
+    con.connect(function(err) {
+      if (err) throw err;
+      console.log("Connected!");
+    });
+  } catch (e) {
+    console.log(e);
+  }
+}
+
 // respond with "hello world" when a GET request is made to the homepage
 app.get('/', function (req, res) {
   res.send('hello world')
-})
-
-app.get('/connect', function (req, res) {
-  con =  mysql.createConnection(mysqlConfig);
-  con.connect(function(err) {
-    if (err) throw err;
-    res.send('connected')
-  });
 })
 
 // Endpoint for login
@@ -67,6 +71,8 @@ app.post('/login', (req, res) => {
   // Authenticate User
   const username = req.body.username
   const password = req.body.password
+
+  connect();
 
   con.query('SELECT * FROM users WHERE username = ? AND password = ?', [username, password], function (err, result, fields) {
     if (err) throw err;
