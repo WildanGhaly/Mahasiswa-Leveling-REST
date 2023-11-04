@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const mysql = require('mysql2');
+const cookieParser = require('cookie-parser');
 
 const mysqlConfig = {
   host: process.env.DB_HOST,
@@ -12,7 +13,7 @@ const mysqlConfig = {
 let con = null;
 
 const app = express();
-
+app.use(cookieParser());
 
 // respond with "hello world" when a GET request is made to the homepage
 app.get('/', function (req, res) {
@@ -24,8 +25,19 @@ app.get('/connect', function (req, res) {
   con.connect(function(err) {
     if (err) throw err;
     res.send('connected')
-  });
+  }); 
 })
+
+app.get('/set-cookie', (req, res) => {
+  // Set HttpOnly dan Secure cookie
+  res.cookie('testCookie8080', 'hello-dari-Willy', {
+    httpOnly: true,
+    secure: true, // Catatan: Secure cookie hanya akan dikirim melalui HTTPS
+    maxAge: 1000 * 60 * 60 // 1 jam
+  });
+  res.send('Cookie has been set');
+});
+
 
 app.get('/challenge', function (req, res) {
   con.query('SELECT * FROM challenge', function (err, result, fields) {
