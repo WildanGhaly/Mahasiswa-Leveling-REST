@@ -26,16 +26,6 @@ app.use(cookieParser());
 app.use(cors(corsOptions));
 
 let refreshTokens = []
-const posts = [
-  {
-    username: 'willy',
-    title: 'Post 1'
-  },
-  {
-    username: 'wildan',
-    title: 'Post 2'
-  }
-]
 
 // Function to generate access token
 function generateAccessToken(user) {
@@ -80,17 +70,14 @@ app.post('/login', (req, res) => {
   const password = req.body.password
 
   connect();
-  console.log(username, password)
+  console.log("Logging in... ", username, password)
   con.query('SELECT * FROM users WHERE username = ? AND password = ?', [username, password], function (err, result, fields) {
-    console.log("Was here", result);
     if (err) throw err;
-    console.log(result);
     if (result.length > 0) {
       const user = { name: username }
       const accessToken = generateAccessToken(user)
       const refreshToken = jwt.sign(user, process.env.REFRESH_TOKEN_SECRET)
       refreshTokens.push(refreshToken)
-      console.log(refreshTokens);
       res.cookie('test', 'hello world', { httpOnly: true, secure: true, sameSite: 'none' });
       res.cookie('accessToken', accessToken, { httpOnly: true, secure: true, sameSite: 'none' });
       res.cookie('refreshToken', refreshToken, { httpOnly: true, secure: true, sameSite: 'none' });
@@ -117,28 +104,30 @@ app.get('/check-status', (req, res) => {
   console.log('check-status');
   const refreshTokens = req.cookies.refreshToken;
   const accessTokens = req.cookies.accessToken;
-  console.log(refreshTokens);
-  console.log(accessTokens);
   res.cookie('test01', 'hello world', { httpOnly: true, secure: true, sameSite: 'none' });
 
   var isTokenValid = false;
 
   if (!refreshTokens && !accessTokens) {
+    console.log('no token');
     isTokenValid = false;
   }
 
   if (accessTokens) {
+    console.log('access token');
     jwt.verify(accessTokens, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
       isTokenValid = err ? false : true;
     })
   }
 
   if (refreshTokens && !isTokenValid) {
+    console.log('refresh token');
     jwt.verify(refreshTokens, process.env.REFRESH_TOKEN_SECRET, (err, user) => {
       if (err) {
         isTokenValid = false;
       } else {
         const accessToken = generateAccessToken({ name: user.name })
+        console.log('name', user.name);
         res.cookie('accessToken', accessToken, { httpOnly: true, secure: true, sameSite: 'none' });
         isTokenValid = true;
       }
@@ -161,15 +150,9 @@ app.delete('/logout', (req, res) => {
   res.sendStatus(204);
 })
 
-// Protected route to get posts
-app.get('/posts', authenticateToken, (req, res) => {
-  res.json(posts.filter(post => post.username === req.user.name))
-})
-
 app.get('/cookie', (req, res) => {
   res.cookie('jwt', 'hello world', { httpOnly: true, secure: true, sameSite: 'none' });
   res.cookie('refreshToken', 'hello world', { httpOnly: true, secure: true, sameSite: 'none' });
-  console.log(req.cookies.jwt);
   res.json({ message: 'cookie set' });
 });
 
