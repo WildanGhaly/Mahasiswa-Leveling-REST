@@ -39,7 +39,7 @@ const posts = [
 
 // Function to generate access token
 function generateAccessToken(user) {
-  return jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '60s' })
+  return jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '10s' })
 }
 
 // Middleware to authenticate token
@@ -121,20 +121,35 @@ app.get('/check-status', (req, res) => {
   console.log(accessTokens);
   res.cookie('test01', 'hello world', { httpOnly: true, secure: true, sameSite: 'none' });
 
-  if (!refreshTokens) return res.json({ isLoggedIn: false })
-  if (!accessTokens) {
-    jwt.verify(refreshTokens, process.env.REFRESH_TOKEN_SECRET, (err, user) => {
-      if (err) return res.json({ isLoggedIn: false })
-      const accessToken = generateAccessToken({ name: user.name })
-      res.json({ isLoggedIn: true, accessToken: accessToken })
+  var isTokenValid = false;
+
+  if (!refreshTokens && !accessTokens) {
+    isTokenValid = false;
+  }
+
+  if (accessTokens) {
+    jwt.verify(accessTokens, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
+      isTokenValid = err ? false : true;
     })
-  } else {
-  
+  }
+
+  if (refreshTokens && !isTokenValid) {
+    jwt.verify(refreshTokens, process.env.REFRESH_TOKEN_SECRET, (err, user) => {
+      if (err) {
+        isTokenValid = false;
+      } else {
+        const accessToken = generateAccessToken({ name: user.name })
+        res.cookie('accessToken', accessToken, { httpOnly: true, secure: true, sameSite: 'none' });
+        isTokenValid = true;
+      }
+    })
+  }
+
+  if (!isTokenValid) {
+    return res.json({ isLoggedIn: false })
   }
   
-  res.cookie('test', 'hello world', { httpOnly: true, secure: true, sameSite: 'none' });
-  console.log('check-status---------');
-  res.json({ isLoggedIn: true })
+  return res.json({ isLoggedIn: true })
 })
 
 // Endpoint to logout
