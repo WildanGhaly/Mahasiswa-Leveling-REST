@@ -127,6 +127,7 @@ app.get('/check-status', (req, res) => {
   res.cookie('test01', 'hello world', { httpOnly: true, secure: true, sameSite: 'none' });
 
   var isTokenValid = false;
+  var username = null;
 
   if (!refreshTokens && !accessTokens) {
     console.log('no token');
@@ -136,7 +137,12 @@ app.get('/check-status', (req, res) => {
   if (accessTokens) {
     console.log('access token');
     jwt.verify(accessTokens, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
-      isTokenValid = err ? false : true;
+      if (err) {
+        isTokenValid = false;
+      } else {
+        isTokenValid = true;
+        username = user.name;
+      }
     })
   }
 
@@ -150,15 +156,16 @@ app.get('/check-status', (req, res) => {
         console.log('name', user.name);
         res.cookie('accessToken', accessToken, { httpOnly: true, secure: true, sameSite: 'none' });
         isTokenValid = true;
+        username = user.name;
       }
     })
   }
 
   if (!isTokenValid) {
-    return res.json({ isLoggedIn: false })
+    return res.json({ isLoggedIn: false, username: null })
   }
   
-  return res.json({ isLoggedIn: true })
+  return res.json({ isLoggedIn: true, username: username })
 })
 
 // Endpoint to logout
