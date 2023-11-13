@@ -170,6 +170,14 @@ app.get('/user/data', (req, res) => {
 
 });
 
+app.get('/products', (req, res) => {
+  con.query('SELECT * FROM products', function (err, result, fields) {
+    if (err) throw err;
+    res.json(result);
+  });
+});
+
+
 // Listen on one port
 app.listen(8080, () => {
   console.log('Server started on ports 8080');
