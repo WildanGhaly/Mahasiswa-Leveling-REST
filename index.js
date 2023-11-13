@@ -7,14 +7,7 @@ const jwt = require('jsonwebtoken')
 const mysql = require('mysql2');
 const cookieParser = require('cookie-parser');
 
-const mysqlConfig = {
-  host: process.env.DB_HOST,
-  user: process.env.MYSQL_USER,
-  password: process.env.MYSQL_PASSWORD,
-  database: process.env.MYSQL_DATABASE
-};
-
-let con = null;
+const con = require('./database.js');
 
 const corsOptions = {
   origin: 'http://localhost:3000',
@@ -45,19 +38,6 @@ function authenticateToken(req, res, next) {
   })
 }
 
-function connect() {
-  if (con) return;
-  try {
-    con =  mysql.createConnection(mysqlConfig);
-    con.connect(function(err) {
-      if (err) throw err;
-      console.log("Connected!");
-    });
-  } catch (e) {
-    console.log(e);
-  }
-}
-
 // respond with "hello world" when a GET request is made to the homepage
 app.get('/', function (req, res) {
   res.send('hello world')
@@ -69,7 +49,6 @@ app.post('/login', (req, res) => {
   const username = req.body.username
   const password = req.body.password
 
-  connect();
   console.log("Logging in... ", username, password)
   con.query('SELECT * FROM users WHERE username = ? AND password = ?', [username, password], function (err, result, fields) {
     if (err) throw err;
@@ -93,7 +72,6 @@ app.post('/register', (req, res) => {
   const email = req.body.email
   const password = req.body.password
 
-  connect();
   console.log("Registering... ", username, password) 
   con.query('INSERT INTO users (username, email, password) VALUES (?, ?, ?)', [username, email, password], function (err, result, fields) {
     if (err) throw err;
@@ -230,7 +208,7 @@ app.get('/user/data', (req, res) => {
     return res.json({ isLoggedIn: false, username: null })
   }
 
-  connect();
+
   console.log("Getting user data... ", username)
 
   con.query('SELECT name, email, points FROM users WHERE username = ?', [username], function (err, result, fields) {
