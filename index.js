@@ -177,6 +177,58 @@ app.get('/products', (req, res) => {
   });
 });
 
+app.get('/merchants', (req, res) => {
+  console.log('merchants');
+  const refreshTokens = req.cookies.refreshToken;
+  const accessTokens = req.cookies.accessToken;
+
+  var isTokenValid = false;
+  var username = null;
+
+  if (!refreshTokens && !accessTokens) {
+    console.log('no token');
+    isTokenValid = false;
+  }
+
+  if (accessTokens) {
+    console.log('access token');
+    jwt.verify(accessTokens, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
+      if (err) {
+        isTokenValid = false;
+      } else {
+        isTokenValid = true;
+        username = user.name;
+      }
+    })
+  }
+
+  if (refreshTokens && !isTokenValid) {
+    console.log('refresh token');
+    jwt.verify(refreshTokens, process.env.REFRESH_TOKEN_SECRET, (err, user) => {
+      if (err) {
+        isTokenValid = false;
+      } else {
+        const accessToken = generateAccessToken({ name: user.name })
+        console.log('name', user.name);
+        res.cookie('accessToken', accessToken, { httpOnly: true, secure: true, sameSite: 'none' });
+        isTokenValid = true;
+        username = user.name;
+      }
+    })
+  }
+
+  if (!isTokenValid) {
+    return res.json({ isLoggedIn: false, username: null })
+  }
+
+  const query = "SELECT p.productid AS MerchantID, up.quantity AS MerchantQuantity, p.productname AS MerchantName, p.imagepath AS MerchantImagePath FROM  users u JOIN user_product up ON u.id = up.user_id JOIN products p ON up.product_id = p.productid WHERE u.username = ?"
+
+  con.query(query, [username], function (err, result, fields) {
+    if (err) throw err;
+    res.json(result);
+  });
+
+});
 
 // Listen on one port
 app.listen(8080, () => {
