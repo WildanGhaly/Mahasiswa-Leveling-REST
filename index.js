@@ -183,6 +183,72 @@ app.get('/cookie', (req, res) => {
   res.json({ message: 'cookie set' });
 });
 
+app.get('/user/data', (req, res) => {
+  const refreshTokens = req.cookies.refreshToken;
+  const accessTokens = req.cookies.accessToken;
+
+  console.log('user/data');
+  console.log('refreshTokens', refreshTokens);
+  console.log('accessTokens', accessTokens);
+
+  var isTokenValid = false;
+  var username = null;
+
+  if (!refreshTokens && !accessTokens) {
+    console.log('no token');
+    isTokenValid = false;
+  }
+
+  if (accessTokens) {
+    console.log('access token');
+    jwt.verify(accessTokens, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
+      if (err) {
+        isTokenValid = false;
+      } else {
+        isTokenValid = true;
+        username = user.name;
+      }
+    })
+  }
+
+  if (refreshTokens && !isTokenValid) {
+    console.log('refresh token');
+    jwt.verify(refreshTokens, process.env.REFRESH_TOKEN_SECRET, (err, user) => {
+      if (err) {
+        isTokenValid = false;
+      } else {
+        const accessToken = generateAccessToken({ name: user.name })
+        console.log('name', user.name);
+        res.cookie('accessToken', accessToken, { httpOnly: true, secure: true, sameSite: 'none' });
+        isTokenValid = true;
+        username = user.name;
+      }
+    })
+  }
+
+  if (!isTokenValid) {
+    return res.json({ isLoggedIn: false, username: null })
+  }
+
+  connect();
+  console.log("Getting user data... ", username)
+
+  con.query('SELECT name, email, points FROM users WHERE username = ?', [username], function (err, result, fields) {
+    if (err) throw err;
+    if (result.length > 0) {
+      res.json({
+        username: username,
+        name: result[0].name,
+        email: result[0].email,
+        points: result[0].points
+      })
+    } else {
+      res.sendStatus(401)
+    } 
+  });
+
+});
+
 // Listen on one port
 app.listen(8080, () => {
   console.log('Server started on ports 8080');
