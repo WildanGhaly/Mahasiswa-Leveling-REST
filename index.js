@@ -1,18 +1,21 @@
-require('dotenv').config()
+require("dotenv").config();
 
-const cors = require('cors');
-const express = require('express')
-const app = express()
-const jwt = require('jsonwebtoken')
-const cookieParser = require('cookie-parser');
+const cors = require("cors");
+const express = require("express");
+const app = express();
+const jwt = require("jsonwebtoken");
+const cookieParser = require("cookie-parser");
 
-const con = require('./database.js');
-const { generateAccessToken, authenticateToken } = require('./auth.js');
+const con = require("./database.js");
+const {
+  generateAccessToken,
+  authenticateToken,
+} = require("./middleware/tokenMiddleware.js");
 
-const authController = require('./controllers/authController');
+const authController = require("./controllers/authController");
 
 const corsOptions = {
-  origin: 'http://localhost:3000',
+  origin: "http://localhost:3000",
   credentials: true, // Izinkan pengiriman cookie (sesuai dengan withCredentials pada axios)
 };
 
@@ -20,12 +23,12 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(cors(corsOptions));
 
-let refreshTokens = []
+let refreshTokens = [];
 
-const { checkToken } = require('./middleware/authMiddleware');
+const { checkToken } = require("./middleware/authMiddleware");
 
 // Menggunakan middleware untuk memeriksa token pada '/check-status'
-app.get('/check-status', checkToken, (req, res) => {
+app.get("/check-status", checkToken, (req, res) => {
   if (!req.isTokenValid) {
     return res.json({ isLoggedIn: false, username: null });
   }
@@ -34,62 +37,65 @@ app.get('/check-status', checkToken, (req, res) => {
 });
 
 // Menggunakan middleware untuk memeriksa token pada '/user/data'
-app.get('/user/data', checkToken, (req, res) => {
+app.get("/user/data", checkToken, (req, res) => {
   if (!req.isTokenValid) {
     return res.json({ isLoggedIn: false, username: null });
   }
 
   console.log("Mengambil data pengguna...", req.username);
 
-  con.query('SELECT name, email, points FROM users WHERE username = ?', [req.username], function (err, result, fields) {
-    if (err) throw err;
-    if (result.length > 0) {
-      res.json({
-        username: req.username,
-        name: result[0].name,
-        email: result[0].email,
-        points: result[0].points
-      });
-    } else {
-      res.sendStatus(401);
-    } 
+  con.query(
+    "SELECT name, email, points FROM users WHERE username = ?",
+    [req.username],
+    function (err, result, fields) {
+      if (err) throw err;
+      if (result.length > 0) {
+        res.json({
+          username: req.username,
+          name: result[0].name,
+          email: result[0].email,
+          points: result[0].points,
+        });
+      } else {
+        res.sendStatus(401);
+      }
+    }
+  );
+});
+
+app.use(authController);
+
+// Endpoint to refresh token
+app.post("/token", (req, res) => {
+  const refreshToken = req.body.token;
+  if (refreshToken == null) return res.sendStatus(401);
+  if (!refreshTokens.includes(refreshToken)) return res.sendStatus(403);
+  jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, user) => {
+    if (err) return res.sendStatus(403);
+    const accessToken = generateAccessToken({ name: user.name });
+    res.json({ accessToken: accessToken });
   });
 });
 
-
-app.use(authController); 
-
-// Endpoint to refresh token
-app.post('/token', (req, res) => {
-  const refreshToken = req.body.token
-  if (refreshToken == null) return res.sendStatus(401)
-  if (!refreshTokens.includes(refreshToken)) return res.sendStatus(403)
-  jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, user) => {
-    if (err) return res.sendStatus(403)
-    const accessToken = generateAccessToken({ name: user.name })
-    res.json({ accessToken: accessToken })
-  })
-})
-
 // Endpoint to logout
-app.delete('/logout', (req, res) => {
+app.delete("/logout", (req, res) => {
   const refreshToken = req.cookies.refreshToken;
-  refreshTokens = refreshTokens.filter(token => token !== refreshToken);
-  res.clearCookie('accessToken');
-  res.clearCookie('refreshToken');
+  refreshTokens = refreshTokens.filter((token) => token !== refreshToken);
+  res.clearCookie("accessToken");
+  res.clearCookie("refreshToken");
   res.sendStatus(204);
-})
+});
 
 // Endpoint '/products'
-app.get('/products', (req, res) => {
-  con.query('SELECT * FROM products', function (err, result, fields) {
+app.get("/products", (req, res) => {
+  con.query("SELECT * FROM products", function (err, result, fields) {
     if (err) throw err;
     res.json(result);
   });
 });
 
 // Endpoint '/merchants'
-app.get('/merchants', checkToken, (req, res) => {
+app.get("/merchants", checkToken, (req, res) => {
   if (!req.isTokenValid) {
     return res.json({ isLoggedIn: false, username: null });
   }
@@ -109,21 +115,25 @@ app.get('/merchants', checkToken, (req, res) => {
 });
 
 // Endpoint '/topup'
-app.post('/topup', checkToken, (req, res) => {
+app.post("/topup", checkToken, (req, res) => {
   if (!req.isTokenValid) {
     return res.json({ isLoggedIn: false, username: null });
   }
 
   const query = "UPDATE users SET points = points + ? WHERE username = ?";
 
-  con.query(query, [req.body.amount, req.username], function (err, result, fields) {
-    if (err) throw err;
-    res.json({ success: true });
-  });
+  con.query(
+    query,
+    [req.body.amount, req.username],
+    function (err, result, fields) {
+      if (err) throw err;
+      res.json({ success: true });
+    }
+  );
 });
 
 // Endpoint '/history'
-app.get('/history', checkToken, (req, res) => {
+app.get("/history", checkToken, (req, res) => {
   if (!req.isTokenValid) {
     return res.json({ isLoggedIn: false, username: null });
   }
@@ -145,5 +155,5 @@ app.get('/history', checkToken, (req, res) => {
 
 // Listen on one port
 app.listen(8080, () => {
-  console.log('Server started on ports 8080');
+  console.log("Server started on ports 8080");
 });

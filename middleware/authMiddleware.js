@@ -1,5 +1,5 @@
-const jwt = require('jsonwebtoken');
-const { generateAccessToken } = require('../auth.js');
+const jwt = require("jsonwebtoken");
+const { generateAccessToken } = require("./tokenMiddleware.js");
 
 exports.checkToken = (req, res, next) => {
   const refreshTokens = req.cookies.refreshToken;
@@ -21,7 +21,11 @@ exports.checkToken = (req, res, next) => {
     jwt.verify(refreshTokens, process.env.REFRESH_TOKEN_SECRET, (err, user) => {
       if (!err) {
         const accessToken = generateAccessToken({ name: user.name });
-        res.cookie('accessToken', accessToken, { httpOnly: true, secure: true, sameSite: 'none' });
+        res.cookie("accessToken", accessToken, {
+          httpOnly: true,
+          secure: true,
+          sameSite: "none",
+        });
         isTokenValid = true;
         username = user.name;
       }
