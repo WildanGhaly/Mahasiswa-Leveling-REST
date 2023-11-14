@@ -28,10 +28,15 @@ function isValidRefreshToken(token) {
   return refreshTokens.includes(token);
 }
 
+function deleteRefreshToken(refreshToken) {
+  refreshTokens = refreshTokens.filter((token) => token !== refreshToken);
+}
+
 
 module.exports = { 
     generateAccessToken, 
     authenticateToken,
     addRefreshToken,
     isValidRefreshToken,
+    deleteRefreshToken,
 };

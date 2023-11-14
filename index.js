@@ -14,6 +14,7 @@ const {
 
 const authController  = require("./routes/authRoutes.js");
 const userRoutes      = require("./routes/userRoutes");
+const tokenRoutes     = require("./routes/tokenRoutes");
 
 const corsOptions = {
   origin: "http://localhost:3000",
@@ -30,29 +31,9 @@ const { checkToken } = require("./middleware/authMiddleware");
 
 // Menggunakan middleware untuk memeriksa token pada '/check-status'
 
-app.use("/user", userRoutes);
-app.use("/auth", authController);
-
-// Endpoint to refresh token
-app.post("/token", (req, res) => {
-  const refreshToken = req.body.token;
-  if (refreshToken == null) return res.sendStatus(401);
-  if (!refreshTokens.includes(refreshToken)) return res.sendStatus(403);
-  jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, user) => {
-    if (err) return res.sendStatus(403);
-    const accessToken = generateAccessToken({ name: user.name });
-    res.json({ accessToken: accessToken });
-  });
-});
-
-// Endpoint to logout
-app.delete("/logout", (req, res) => {
-  const refreshToken = req.cookies.refreshToken;
-  refreshTokens = refreshTokens.filter((token) => token !== refreshToken);
-  res.clearCookie("accessToken");
-  res.clearCookie("refreshToken");
-  res.sendStatus(204);
-});
+app.use("/user",    userRoutes);
+app.use("/auth",    authController);
+app.use("/token",   tokenRoutes);
 
 // Endpoint '/products'
 app.get("/products", (req, res) => {
