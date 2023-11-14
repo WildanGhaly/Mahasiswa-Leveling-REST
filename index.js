@@ -12,6 +12,7 @@ const tokenRoutes     = require("./routes/tokenRoutes");
 const { checkToken }  = require("./middleware/authMiddleware");
 const merchantRoutes  = require("./routes/merchantRoutes.js");
 const productRoutes   = require("./routes/productRoutes.js");
+const topupRoutes     = require("./routes/topupRoutes.js");
 
 const corsOptions = {
   origin: "http://localhost:3000",
@@ -30,24 +31,8 @@ app.use("/auth",      authController);
 app.use("/token",     tokenRoutes);
 app.use("/merchants", merchantRoutes);
 app.use("/products",  productRoutes);
+app.use("/topup",     topupRoutes);
 
-// Endpoint '/topup'
-app.post("/topup", checkToken, (req, res) => {
-  if (!req.isTokenValid) {
-    return res.json({ isLoggedIn: false, username: null });
-  }
-
-  const query = "UPDATE users SET points = points + ? WHERE username = ?";
-
-  con.query(
-    query,
-    [req.body.amount, req.username],
-    function (err, result, fields) {
-      if (err) throw err;
-      res.json({ success: true });
-    }
-  );
-});
 
 // Endpoint '/history'
 app.get("/history", checkToken, (req, res) => {
