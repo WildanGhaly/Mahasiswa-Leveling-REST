@@ -4,7 +4,7 @@ const express = require("express");
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
 const { generateAccessToken } = require("../middleware/tokenMiddleware.js");
-const con = require("../database.js");
+const con = require("../database/database.js");
 
 const {
   addRefreshToken,

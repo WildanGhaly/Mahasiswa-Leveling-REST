@@ -6,7 +6,7 @@ const app = express();
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
 
-const con = require("./database.js");
+const con = require("./database/database.js");
 const {
   generateAccessToken,
   authenticateToken,
