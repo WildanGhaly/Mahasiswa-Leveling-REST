@@ -88,11 +88,6 @@ app.get('/user/data', checkToken, (req, res) => {
 });
 
 
-// respond with "hello world" when a GET request is made to the homepage
-app.get('/', function (req, res) {
-  res.send('hello world')
-})
-
 app.use(authController); 
 
 // Endpoint to refresh token
@@ -116,12 +111,7 @@ app.delete('/logout', (req, res) => {
   res.sendStatus(204);
 })
 
-app.get('/cookie', (req, res) => {
-  res.cookie('jwt', 'hello world', { httpOnly: true, secure: true, sameSite: 'none' });
-  res.cookie('refreshToken', 'hello world', { httpOnly: true, secure: true, sameSite: 'none' });
-  res.json({ message: 'cookie set' });
-});
-
+// Endpoint '/products'
 app.get('/products', (req, res) => {
   con.query('SELECT * FROM products', function (err, result, fields) {
     if (err) throw err;
