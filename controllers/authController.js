@@ -1,4 +1,5 @@
 // authController.js
+
 const jwt = require("jsonwebtoken");
 const con = require("../database/database.js");
 const { generateAccessToken } = require("../middleware/tokenMiddleware.js");

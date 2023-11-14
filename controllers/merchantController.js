@@ -1,4 +1,5 @@
 // merchantController.js
+
 const con = require("../database/database.js");
 
 exports.getMerchants = (req, res) => {

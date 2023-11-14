@@ -1,4 +1,5 @@
 // userController.js
+
 const con = require("../database/database.js");
 
 exports.checkStatus = (req, res) => {

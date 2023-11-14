@@ -1,4 +1,5 @@
 // historyController.js
+
 const con = require("../database/database.js");
 
 exports.getHistory = (req, res) => {

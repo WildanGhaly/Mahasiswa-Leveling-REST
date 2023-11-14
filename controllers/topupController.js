@@ -1,4 +1,5 @@
-// pointsController.js
+// topupController.js
+
 const con = require("../database/database.js");
 
 exports.updatePoints = (req, res) => {

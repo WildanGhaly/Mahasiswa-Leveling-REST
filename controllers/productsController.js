@@ -1,4 +1,5 @@
 // productsController.js
+
 const con = require("../database/database.js");
 
 exports.getProducts = (req, res) => {
