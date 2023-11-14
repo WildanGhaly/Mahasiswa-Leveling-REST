@@ -230,6 +230,63 @@ app.get('/merchants', (req, res) => {
 
 });
 
+app.post('/topup', (req, res) => {
+  console.log('topup');
+
+  const refreshTokens = req.cookies.refreshToken;
+  const accessTokens = req.cookies.accessToken;
+
+  var isTokenValid = false;
+  var username = null;
+
+  console.log('refreshTokens', refreshTokens);
+  console.log('accessTokens', accessTokens);
+
+  if (!refreshTokens && !accessTokens) {
+    console.log('no token');
+    isTokenValid = false;
+  }
+
+  if (accessTokens) {
+    console.log('access token');
+    jwt.verify(accessTokens, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
+      if (err) {
+        isTokenValid = false;
+      } else {
+        isTokenValid = true;
+        username = user.name;
+      }
+    })
+  }
+
+  if (refreshTokens && !isTokenValid) {
+    console.log('refresh token');
+    jwt.verify(refreshTokens, process.env.REFRESH_TOKEN_SECRET, (err, user) => {
+      if (err) {
+        isTokenValid = false;
+      } else {
+        const accessToken = generateAccessToken({ name: user.name })
+        console.log('name', user.name);
+        res.cookie('accessToken', accessToken, { httpOnly: true, secure: true, sameSite: 'none' });
+        isTokenValid = true;
+        username = user.name;
+      }
+    })
+  }
+
+  if (!isTokenValid) {
+    return res.json({ isLoggedIn: false, username: null })
+  }
+
+  const query = "UPDATE users SET points = points + ? WHERE username = ?"
+
+  con.query(query, [req.body.amount, username], function (err, result, fields) {
+    if (err) throw err;
+    res.json({ success: true });
+  });
+
+});
+
 // Listen on one port
 app.listen(8080, () => {
   console.log('Server started on ports 8080');
