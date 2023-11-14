@@ -4,15 +4,14 @@ const cors            = require("cors");
 const express         = require("express");
 const app             = express();
 const cookieParser    = require("cookie-parser");
-const con             = require("./database/database.js");
 
 const authController  = require("./routes/authRoutes.js");
 const userRoutes      = require("./routes/userRoutes");
 const tokenRoutes     = require("./routes/tokenRoutes");
-const { checkToken }  = require("./middleware/authMiddleware");
 const merchantRoutes  = require("./routes/merchantRoutes.js");
 const productRoutes   = require("./routes/productRoutes.js");
 const topupRoutes     = require("./routes/topupRoutes.js");
+const historyRoutes   = require("./routes/historyRoutes.js");
 
 const corsOptions = {
   origin: "http://localhost:3000",
@@ -23,37 +22,13 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(cors(corsOptions));
 
-
-// Menggunakan middleware untuk memeriksa token pada '/check-status'
-
 app.use("/user",      userRoutes);
 app.use("/auth",      authController);
 app.use("/token",     tokenRoutes);
 app.use("/merchants", merchantRoutes);
 app.use("/products",  productRoutes);
 app.use("/topup",     topupRoutes);
-
-
-// Endpoint '/history'
-app.get("/history", checkToken, (req, res) => {
-  if (!req.isTokenValid) {
-    return res.json({ isLoggedIn: false, username: null });
-  }
-
-  const query = `
-    SELECT h.history_id as HistoryID, h.quantity as HistoryQuantity,
-           p.productname as HistoryProductName, h.timestamp as HistoryDate,
-           p.imagepath as HistoryImagePath
-    FROM users u
-    JOIN history h ON u.id = h.user_id
-    JOIN products p ON p.productid = h.product_id
-    WHERE username = ?`;
-
-  con.query(query, [req.username], function (err, result, fields) {
-    if (err) throw err;
-    res.json(result);
-  });
-});
+app.use("/history",   historyRoutes);
 
 // Listen on one port
 app.listen(8080, () => {
