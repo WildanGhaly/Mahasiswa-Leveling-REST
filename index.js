@@ -22,38 +22,7 @@ app.use(cors(corsOptions));
 
 let refreshTokens = []
 
-// Membuat middleware untuk memeriksa token
-function checkToken(req, res, next) {
-  const refreshTokens = req.cookies.refreshToken;
-  const accessTokens = req.cookies.accessToken;
-
-  var isTokenValid = false;
-  var username = null;
-
-  if (accessTokens) {
-    jwt.verify(accessTokens, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
-      if (!err) {
-        isTokenValid = true;
-        username = user.name;
-      }
-    });
-  }
-
-  if (!isTokenValid && refreshTokens) {
-    jwt.verify(refreshTokens, process.env.REFRESH_TOKEN_SECRET, (err, user) => {
-      if (!err) {
-        const accessToken = generateAccessToken({ name: user.name });
-        res.cookie('accessToken', accessToken, { httpOnly: true, secure: true, sameSite: 'none' });
-        isTokenValid = true;
-        username = user.name;
-      }
-    });
-  }
-
-  req.isTokenValid = isTokenValid;
-  req.username = username;
-  next();
-}
+const { checkToken } = require('./middleware/authMiddleware');
 
 // Menggunakan middleware untuk memeriksa token pada '/check-status'
 app.get('/check-status', checkToken, (req, res) => {
