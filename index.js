@@ -11,6 +11,7 @@ const userRoutes      = require("./routes/userRoutes");
 const tokenRoutes     = require("./routes/tokenRoutes");
 const { checkToken }  = require("./middleware/authMiddleware");
 const merchantRoutes  = require("./routes/merchantRoutes.js");
+const productRoutes   = require("./routes/productRoutes.js");
 
 const corsOptions = {
   origin: "http://localhost:3000",
@@ -28,14 +29,7 @@ app.use("/user",      userRoutes);
 app.use("/auth",      authController);
 app.use("/token",     tokenRoutes);
 app.use("/merchants", merchantRoutes);
-
-// Endpoint '/products'
-app.get("/products", (req, res) => {
-  con.query("SELECT * FROM products", function (err, result, fields) {
-    if (err) throw err;
-    res.json(result);
-  });
-});
+app.use("/products",  productRoutes);
 
 // Endpoint '/topup'
 app.post("/topup", checkToken, (req, res) => {
