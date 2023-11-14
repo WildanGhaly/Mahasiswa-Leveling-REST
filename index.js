@@ -12,8 +12,8 @@ const {
   authenticateToken,
 } = require("./middleware/tokenMiddleware.js");
 
-const authController  = require("./controllers/authController");
-const userRoutes      = require('./routes/userRoutes');
+const authController  = require("./routes/authRoutes.js");
+const userRoutes      = require("./routes/userRoutes");
 
 const corsOptions = {
   origin: "http://localhost:3000",
@@ -31,7 +31,7 @@ const { checkToken } = require("./middleware/authMiddleware");
 // Menggunakan middleware untuk memeriksa token pada '/check-status'
 
 app.use("/user", userRoutes);
-app.use(authController);
+app.use("/auth", authController);
 
 // Endpoint to refresh token
 app.post("/token", (req, res) => {

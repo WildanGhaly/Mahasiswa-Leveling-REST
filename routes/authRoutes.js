@@ -1,17 +1,12 @@
-// authController.js
+// authRoutes.js
 
-const express = require("express");
-const jwt = require("jsonwebtoken");
-const cookieParser = require("cookie-parser");
-const { generateAccessToken } = require("../middleware/tokenMiddleware.js");
-const con = require("../database/database.js");
-
-const {
-  addRefreshToken,
-  isValidRefreshToken,
-} = require("../middleware/tokenMiddleware.js");
-
-const router = express.Router();
+const express                   = require("express");
+const jwt                       = require("jsonwebtoken");
+const cookieParser              = require("cookie-parser");
+const con                       = require("../database/database.js");
+const { generateAccessToken }   = require("../middleware/tokenMiddleware.js");
+const { addRefreshToken }       = require("../middleware/tokenMiddleware.js");
+const router                    = express.Router();
 router.use(cookieParser());
 
 router.post("/login", (req, res) => {
