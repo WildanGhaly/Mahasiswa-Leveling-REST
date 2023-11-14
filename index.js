@@ -287,6 +287,59 @@ app.post('/topup', (req, res) => {
 
 });
 
+app.get('/history', (req, res) => {
+  console.log('history');
+  const refreshTokens = req.cookies.refreshToken;
+  const accessTokens = req.cookies.accessToken;
+
+  var isTokenValid = false;
+  var username = null;
+
+  if (!refreshTokens && !accessTokens) {
+    console.log('no token');
+    isTokenValid = false;
+  }
+
+  if (accessTokens) {
+    console.log('access token');
+    jwt.verify(accessTokens, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
+      if (err) {
+        isTokenValid = false;
+      } else {
+        isTokenValid = true;
+        username = user.name;
+      }
+    })
+  }
+
+  if (refreshTokens && !isTokenValid) {
+    console.log('refresh token');
+    jwt.verify(refreshTokens, process.env.REFRESH_TOKEN_SECRET, (err, user) => {
+      if (err) {
+        isTokenValid = false;
+      } else {
+        const accessToken = generateAccessToken({ name: user.name })
+        console.log('name', user.name);
+        res.cookie('accessToken', accessToken, { httpOnly: true, secure: true, sameSite: 'none' });
+        isTokenValid = true;
+        username = user.name;
+      }
+    })
+  }
+
+  if (!isTokenValid) {
+    return res.json({ isLoggedIn: false, username: null })
+  }
+
+  const query = "SELECT h.history_id as HistoryID, h.quantity as HistoryQuantity, p.productname as HistoryProductName, h.timestamp as HistoryDate, p.imagepath as HistoryImagePath FROM users u JOIN history h ON u.id = h.user_id JOIN products p ON p.productid = h.product_id WHERE username = ?;"
+
+  con.query(query, [username], function (err, result, fields) {
+    if (err) throw err;
+    res.json(result);
+  });
+
+});
+
 // Listen on one port
 app.listen(8080, () => {
   console.log('Server started on ports 8080');
