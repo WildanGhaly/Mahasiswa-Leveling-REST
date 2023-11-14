@@ -22,6 +22,72 @@ app.use(cors(corsOptions));
 
 let refreshTokens = []
 
+// Membuat middleware untuk memeriksa token
+function checkToken(req, res, next) {
+  const refreshTokens = req.cookies.refreshToken;
+  const accessTokens = req.cookies.accessToken;
+
+  var isTokenValid = false;
+  var username = null;
+
+  if (accessTokens) {
+    jwt.verify(accessTokens, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
+      if (!err) {
+        isTokenValid = true;
+        username = user.name;
+      }
+    });
+  }
+
+  if (!isTokenValid && refreshTokens) {
+    jwt.verify(refreshTokens, process.env.REFRESH_TOKEN_SECRET, (err, user) => {
+      if (!err) {
+        const accessToken = generateAccessToken({ name: user.name });
+        res.cookie('accessToken', accessToken, { httpOnly: true, secure: true, sameSite: 'none' });
+        isTokenValid = true;
+        username = user.name;
+      }
+    });
+  }
+
+  req.isTokenValid = isTokenValid;
+  req.username = username;
+  next();
+}
+
+// Menggunakan middleware untuk memeriksa token pada '/check-status'
+app.get('/check-status', checkToken, (req, res) => {
+  if (!req.isTokenValid) {
+    return res.json({ isLoggedIn: false, username: null });
+  }
+
+  return res.json({ isLoggedIn: true, username: req.username });
+});
+
+// Menggunakan middleware untuk memeriksa token pada '/user/data'
+app.get('/user/data', checkToken, (req, res) => {
+  if (!req.isTokenValid) {
+    return res.json({ isLoggedIn: false, username: null });
+  }
+
+  console.log("Mengambil data pengguna...", req.username);
+
+  con.query('SELECT name, email, points FROM users WHERE username = ?', [req.username], function (err, result, fields) {
+    if (err) throw err;
+    if (result.length > 0) {
+      res.json({
+        username: req.username,
+        name: result[0].name,
+        email: result[0].email,
+        points: result[0].points
+      });
+    } else {
+      res.sendStatus(401);
+    } 
+  });
+});
+
+
 // respond with "hello world" when a GET request is made to the homepage
 app.get('/', function (req, res) {
   res.send('hello world')
@@ -41,54 +107,6 @@ app.post('/token', (req, res) => {
   })
 })
 
-app.get('/check-status', (req, res) => {
-  console.log('check-status');
-  const refreshTokens = req.cookies.refreshToken;
-  const accessTokens = req.cookies.accessToken;
-  res.cookie('test01', 'hello world', { httpOnly: true, secure: true, sameSite: 'none' });
-
-  var isTokenValid = false;
-  var username = null;
-
-  if (!refreshTokens && !accessTokens) {
-    console.log('no token');
-    isTokenValid = false;
-  }
-
-  if (accessTokens) {
-    console.log('access token');
-    jwt.verify(accessTokens, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
-      if (err) {
-        isTokenValid = false;
-      } else {
-        isTokenValid = true;
-        username = user.name;
-      }
-    })
-  }
-
-  if (refreshTokens && !isTokenValid) {
-    console.log('refresh token');
-    jwt.verify(refreshTokens, process.env.REFRESH_TOKEN_SECRET, (err, user) => {
-      if (err) {
-        isTokenValid = false;
-      } else {
-        const accessToken = generateAccessToken({ name: user.name })
-        console.log('name', user.name);
-        res.cookie('accessToken', accessToken, { httpOnly: true, secure: true, sameSite: 'none' });
-        isTokenValid = true;
-        username = user.name;
-      }
-    })
-  }
-
-  if (!isTokenValid) {
-    return res.json({ isLoggedIn: false, username: null })
-  }
-  
-  return res.json({ isLoggedIn: true, username: username })
-})
-
 // Endpoint to logout
 app.delete('/logout', (req, res) => {
   const refreshToken = req.cookies.refreshToken;
@@ -104,72 +122,6 @@ app.get('/cookie', (req, res) => {
   res.json({ message: 'cookie set' });
 });
 
-app.get('/user/data', (req, res) => {
-  const refreshTokens = req.cookies.refreshToken;
-  const accessTokens = req.cookies.accessToken;
-
-  console.log('user/data');
-  console.log('refreshTokens', refreshTokens);
-  console.log('accessTokens', accessTokens);
-
-  var isTokenValid = false;
-  var username = null;
-
-  if (!refreshTokens && !accessTokens) {
-    console.log('no token');
-    isTokenValid = false;
-  }
-
-  if (accessTokens) {
-    console.log('access token');
-    jwt.verify(accessTokens, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
-      if (err) {
-        isTokenValid = false;
-      } else {
-        isTokenValid = true;
-        username = user.name;
-      }
-    })
-  }
-
-  if (refreshTokens && !isTokenValid) {
-    console.log('refresh token');
-    jwt.verify(refreshTokens, process.env.REFRESH_TOKEN_SECRET, (err, user) => {
-      if (err) {
-        isTokenValid = false;
-      } else {
-        const accessToken = generateAccessToken({ name: user.name })
-        console.log('name', user.name);
-        res.cookie('accessToken', accessToken, { httpOnly: true, secure: true, sameSite: 'none' });
-        isTokenValid = true;
-        username = user.name;
-      }
-    })
-  }
-
-  if (!isTokenValid) {
-    return res.json({ isLoggedIn: false, username: null })
-  }
-
-
-  console.log("Getting user data... ", username)
-
-  con.query('SELECT name, email, points FROM users WHERE username = ?', [username], function (err, result, fields) {
-    if (err) throw err;
-    if (result.length > 0) {
-      res.json({
-        username: username,
-        name: result[0].name,
-        email: result[0].email,
-        points: result[0].points
-      })
-    } else {
-      res.sendStatus(401)
-    } 
-  });
-
-});
-
 app.get('/products', (req, res) => {
   con.query('SELECT * FROM products', function (err, result, fields) {
     if (err) throw err;
@@ -177,167 +129,59 @@ app.get('/products', (req, res) => {
   });
 });
 
-app.get('/merchants', (req, res) => {
-  console.log('merchants');
-  const refreshTokens = req.cookies.refreshToken;
-  const accessTokens = req.cookies.accessToken;
-
-  var isTokenValid = false;
-  var username = null;
-
-  if (!refreshTokens && !accessTokens) {
-    console.log('no token');
-    isTokenValid = false;
+// Endpoint '/merchants'
+app.get('/merchants', checkToken, (req, res) => {
+  if (!req.isTokenValid) {
+    return res.json({ isLoggedIn: false, username: null });
   }
 
-  if (accessTokens) {
-    console.log('access token');
-    jwt.verify(accessTokens, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
-      if (err) {
-        isTokenValid = false;
-      } else {
-        isTokenValid = true;
-        username = user.name;
-      }
-    })
-  }
+  const query = `
+    SELECT p.productid AS MerchantID, up.quantity AS MerchantQuantity,
+           p.productname AS MerchantName, p.imagepath AS MerchantImagePath
+    FROM users u
+    JOIN user_product up ON u.id = up.user_id
+    JOIN products p ON up.product_id = p.productid
+    WHERE u.username = ?`;
 
-  if (refreshTokens && !isTokenValid) {
-    console.log('refresh token');
-    jwt.verify(refreshTokens, process.env.REFRESH_TOKEN_SECRET, (err, user) => {
-      if (err) {
-        isTokenValid = false;
-      } else {
-        const accessToken = generateAccessToken({ name: user.name })
-        console.log('name', user.name);
-        res.cookie('accessToken', accessToken, { httpOnly: true, secure: true, sameSite: 'none' });
-        isTokenValid = true;
-        username = user.name;
-      }
-    })
-  }
-
-  if (!isTokenValid) {
-    return res.json({ isLoggedIn: false, username: null })
-  }
-
-  const query = "SELECT p.productid AS MerchantID, up.quantity AS MerchantQuantity, p.productname AS MerchantName, p.imagepath AS MerchantImagePath FROM  users u JOIN user_product up ON u.id = up.user_id JOIN products p ON up.product_id = p.productid WHERE u.username = ?"
-
-  con.query(query, [username], function (err, result, fields) {
+  con.query(query, [req.username], function (err, result, fields) {
     if (err) throw err;
     res.json(result);
   });
-
 });
 
-app.post('/topup', (req, res) => {
-  console.log('topup');
-
-  const refreshTokens = req.cookies.refreshToken;
-  const accessTokens = req.cookies.accessToken;
-
-  var isTokenValid = false;
-  var username = null;
-
-  console.log('refreshTokens', refreshTokens);
-  console.log('accessTokens', accessTokens);
-
-  if (!refreshTokens && !accessTokens) {
-    console.log('no token');
-    isTokenValid = false;
+// Endpoint '/topup'
+app.post('/topup', checkToken, (req, res) => {
+  if (!req.isTokenValid) {
+    return res.json({ isLoggedIn: false, username: null });
   }
 
-  if (accessTokens) {
-    console.log('access token');
-    jwt.verify(accessTokens, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
-      if (err) {
-        isTokenValid = false;
-      } else {
-        isTokenValid = true;
-        username = user.name;
-      }
-    })
-  }
+  const query = "UPDATE users SET points = points + ? WHERE username = ?";
 
-  if (refreshTokens && !isTokenValid) {
-    console.log('refresh token');
-    jwt.verify(refreshTokens, process.env.REFRESH_TOKEN_SECRET, (err, user) => {
-      if (err) {
-        isTokenValid = false;
-      } else {
-        const accessToken = generateAccessToken({ name: user.name })
-        console.log('name', user.name);
-        res.cookie('accessToken', accessToken, { httpOnly: true, secure: true, sameSite: 'none' });
-        isTokenValid = true;
-        username = user.name;
-      }
-    })
-  }
-
-  if (!isTokenValid) {
-    return res.json({ isLoggedIn: false, username: null })
-  }
-
-  const query = "UPDATE users SET points = points + ? WHERE username = ?"
-
-  con.query(query, [req.body.amount, username], function (err, result, fields) {
+  con.query(query, [req.body.amount, req.username], function (err, result, fields) {
     if (err) throw err;
     res.json({ success: true });
   });
-
 });
 
-app.get('/history', (req, res) => {
-  console.log('history');
-  const refreshTokens = req.cookies.refreshToken;
-  const accessTokens = req.cookies.accessToken;
-
-  var isTokenValid = false;
-  var username = null;
-
-  if (!refreshTokens && !accessTokens) {
-    console.log('no token');
-    isTokenValid = false;
+// Endpoint '/history'
+app.get('/history', checkToken, (req, res) => {
+  if (!req.isTokenValid) {
+    return res.json({ isLoggedIn: false, username: null });
   }
 
-  if (accessTokens) {
-    console.log('access token');
-    jwt.verify(accessTokens, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
-      if (err) {
-        isTokenValid = false;
-      } else {
-        isTokenValid = true;
-        username = user.name;
-      }
-    })
-  }
+  const query = `
+    SELECT h.history_id as HistoryID, h.quantity as HistoryQuantity,
+           p.productname as HistoryProductName, h.timestamp as HistoryDate,
+           p.imagepath as HistoryImagePath
+    FROM users u
+    JOIN history h ON u.id = h.user_id
+    JOIN products p ON p.productid = h.product_id
+    WHERE username = ?`;
 
-  if (refreshTokens && !isTokenValid) {
-    console.log('refresh token');
-    jwt.verify(refreshTokens, process.env.REFRESH_TOKEN_SECRET, (err, user) => {
-      if (err) {
-        isTokenValid = false;
-      } else {
-        const accessToken = generateAccessToken({ name: user.name })
-        console.log('name', user.name);
-        res.cookie('accessToken', accessToken, { httpOnly: true, secure: true, sameSite: 'none' });
-        isTokenValid = true;
-        username = user.name;
-      }
-    })
-  }
-
-  if (!isTokenValid) {
-    return res.json({ isLoggedIn: false, username: null })
-  }
-
-  const query = "SELECT h.history_id as HistoryID, h.quantity as HistoryQuantity, p.productname as HistoryProductName, h.timestamp as HistoryDate, p.imagepath as HistoryImagePath FROM users u JOIN history h ON u.id = h.user_id JOIN products p ON p.productid = h.product_id WHERE username = ?;"
-
-  con.query(query, [username], function (err, result, fields) {
+  con.query(query, [req.username], function (err, result, fields) {
     if (err) throw err;
     res.json(result);
   });
-
 });
 
 // Listen on one port
