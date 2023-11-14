@@ -1,13 +1,9 @@
+// productRoutes.js
+
 const express = require("express");
 const routes = express.Router();
-const con = require("../database/database.js");
+const productsController = require("../controllers/productsController");
 
-routes.get("/", (req, res) => {
-    con.query("SELECT * FROM products", function (err, result, fields) {
-      if (err) throw err;
-      res.json(result);
-    });
-  });
+routes.get("/", productsController.getProducts);
 
 module.exports = routes;
-  

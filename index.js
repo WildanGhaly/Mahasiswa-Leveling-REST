@@ -7,7 +7,6 @@ const cookieParser    = require("cookie-parser");
 
 const authController  = require("./routes/authRoutes.js");
 const userRoutes      = require("./routes/userRoutes");
-const tokenRoutes     = require("./routes/tokenRoutes");
 const merchantRoutes  = require("./routes/merchantRoutes.js");
 const productRoutes   = require("./routes/productRoutes.js");
 const topupRoutes     = require("./routes/topupRoutes.js");
@@ -24,7 +23,6 @@ app.use(cors(corsOptions));
 
 app.use("/user",      userRoutes);
 app.use("/auth",      authController);
-app.use("/token",     tokenRoutes);
 app.use("/merchants", merchantRoutes);
 app.use("/products",  productRoutes);
 app.use("/topup",     topupRoutes);
