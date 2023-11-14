@@ -12,7 +12,8 @@ const {
   authenticateToken,
 } = require("./middleware/tokenMiddleware.js");
 
-const authController = require("./controllers/authController");
+const authController  = require("./controllers/authController");
+const userRoutes      = require('./routes/userRoutes');
 
 const corsOptions = {
   origin: "http://localhost:3000",
@@ -28,41 +29,8 @@ let refreshTokens = [];
 const { checkToken } = require("./middleware/authMiddleware");
 
 // Menggunakan middleware untuk memeriksa token pada '/check-status'
-app.get("/check-status", checkToken, (req, res) => {
-  if (!req.isTokenValid) {
-    return res.json({ isLoggedIn: false, username: null });
-  }
 
-  return res.json({ isLoggedIn: true, username: req.username });
-});
-
-// Menggunakan middleware untuk memeriksa token pada '/user/data'
-app.get("/user/data", checkToken, (req, res) => {
-  if (!req.isTokenValid) {
-    return res.json({ isLoggedIn: false, username: null });
-  }
-
-  console.log("Mengambil data pengguna...", req.username);
-
-  con.query(
-    "SELECT name, email, points FROM users WHERE username = ?",
-    [req.username],
-    function (err, result, fields) {
-      if (err) throw err;
-      if (result.length > 0) {
-        res.json({
-          username: req.username,
-          name: result[0].name,
-          email: result[0].email,
-          points: result[0].points,
-        });
-      } else {
-        res.sendStatus(401);
-      }
-    }
-  );
-});
-
+app.use("/user", userRoutes);
 app.use(authController);
 
 // Endpoint to refresh token
