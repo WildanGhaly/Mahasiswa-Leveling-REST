@@ -8,3 +8,14 @@ exports.getProducts = (req, res) => {
     res.json(result);
   });
 };
+
+exports.getProductsByID = (req, res) => {
+  con.query(
+    "SELECT ProductName, Description, StockQuantity, Price, ImagePath FROM products WHERE productid = ?",
+    [req.params.id],
+    function (err, result, fields) {
+      if (err) throw err;
+      res.json(result);
+    }
+  );
+};
