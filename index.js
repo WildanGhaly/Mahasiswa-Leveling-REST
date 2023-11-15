@@ -11,6 +11,7 @@ const merchantRoutes  = require("./routes/merchantRoutes.js");
 const productRoutes   = require("./routes/productRoutes.js");
 const topupRoutes     = require("./routes/topupRoutes.js");
 const historyRoutes   = require("./routes/historyRoutes.js");
+const buyProductRoutes = require("./routes/buyProductRoutes.js");
 
 const corsOptions = {
   origin: "http://localhost:3000",
@@ -27,6 +28,7 @@ app.use("/merchants", merchantRoutes);
 app.use("/products",  productRoutes);
 app.use("/topup",     topupRoutes);
 app.use("/history",   historyRoutes);
+app.use("/buy",       buyProductRoutes);
 
 // Listen on one port
 app.listen(8080, () => {
