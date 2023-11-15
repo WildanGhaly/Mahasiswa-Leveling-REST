@@ -19,3 +19,15 @@ exports.getProductsByID = (req, res) => {
     }
   );
 };
+
+exports.getTotalProducts = (req, res) => {
+  console.log("Menghitung total produk...");
+  con.query("SELECT COUNT(*) AS TotalProducts FROM products", function (
+    err,
+    result,
+    fields
+  ) {
+    if (err) throw err;
+    res.json(result);
+  });
+};

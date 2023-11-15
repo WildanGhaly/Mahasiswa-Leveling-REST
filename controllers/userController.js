@@ -3,6 +3,9 @@
 const con = require("../database/database.js");
 
 exports.checkStatus = (req, res) => {
+
+  console.log("Mengecek status pengguna...", req.username);
+
   if (!req.isTokenValid) {
     return res.json({ isLoggedIn: false, username: null });
   }
