@@ -29,6 +29,7 @@ const buyProduct_soap_template = `<Envelope xmlns="http://schemas.xmlsoap.org/so
         <arg0 xmlns="">%d</arg0>
         <arg1 xmlns="">%d</arg1>
         <arg2 xmlns="">%d</arg2>
+        <arg3 xmlns="">%d</arg3>
     </buyProduct>
 </Body>
 </Envelope>`;
@@ -53,6 +54,6 @@ const getHistory = {
   template: getHistory_soap_template
 };
 
-module.exports = { topup };
+module.exports = { topup, buyProduct, getHistory };
 
 
