@@ -31,3 +31,18 @@ exports.getTotalProducts = (req, res) => {
     res.json(result);
   });
 };
+ 
+exports.getProductByPage = (req, res) => {
+  console.log("Mengambil produk per halaman...");
+  const page = req.params.page;
+  const limit = req.params.limit;
+  const offset = (page - 1) * limit;
+  con.query(
+    "SELECT * FROM products LIMIT " + limit + " OFFSET " + offset,
+    function (err, result, fields) {
+      if (err) throw err;
+      res.json(result);
+    }
+  );
+  
+}; 
