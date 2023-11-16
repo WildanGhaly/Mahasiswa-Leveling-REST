@@ -21,7 +21,7 @@ exports.getUserData = (req, res) => {
   console.log("Mengambil data pengguna...", req.username);
 
   con.query(
-    "SELECT name, email, points FROM users WHERE username = ?",
+    "SELECT name, email FROM users WHERE username = ?",
     [req.username],
     function (err, result, fields) {
       if (err) throw err;
@@ -30,7 +30,6 @@ exports.getUserData = (req, res) => {
           username: req.username,
           name: result[0].name,
           email: result[0].email,
-          points: result[0].points,
         });
       } else {
         res.sendStatus(401);
