@@ -2,7 +2,7 @@
 
 const jwt = require("jsonwebtoken");
 const con = require("../database/database.js");
-const { generateAccessToken } = require("../middleware/tokenMiddleware.js");
+const { generateAccessToken, deleteRefreshToken } = require("../middleware/tokenMiddleware.js");
 const { addRefreshToken } = require("../middleware/tokenMiddleware.js");
 
 exports.login = (req, res) => {
@@ -85,6 +85,7 @@ exports.generateAccessTokenFromRefreshToken = (req, res) => {
   };
   
 exports.logout = (req, res) => {
+    console.log("Logging out...");
     const refreshToken = req.cookies.refreshToken;
     deleteRefreshToken(refreshToken);
     res.clearCookie("accessToken");
