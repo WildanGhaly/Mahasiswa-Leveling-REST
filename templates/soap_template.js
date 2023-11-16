@@ -54,6 +54,38 @@ const getHistory = {
   template: getHistory_soap_template
 };
 
-module.exports = { topup, buyProduct, getHistory };
+const checkCode_soap_template = `<Envelope xmlns="http://schemas.xmlsoap.org/soap/envelope/">
+<Body>
+    <checkCode xmlns="http://service.example.org/">
+        <arg0 xmlns="">%s</arg0>
+        <arg1 xmlns="">%d</arg1>
+    </checkCode>
+</Body>
+</Envelope>">`;
+
+const checkCode = {
+  url: "http://localhost:8081/checkCode",
+  headers: headers,
+  template: checkCode_soap_template
+}
+
+const uangConverter_soap_template = `<Envelope xmlns="http://schemas.xmlsoap.org/soap/envelope/">
+<Body>
+    <checkCode xmlns="http://service.example.org/">
+        <arg0 xmlns="">%s</arg0>
+        <arg1 xmlns="">%d</arg1>
+    </checkCode>
+</Body>
+</Envelope>`;
+
+const uangConverter = {
+  url: "http://localhost:8081/uangConverter",
+  headers: headers,
+  template: uangConverter_soap_template
+}
+
+
+
+module.exports = { topup, buyProduct, getHistory, checkCode, uangConverter };
 
 
