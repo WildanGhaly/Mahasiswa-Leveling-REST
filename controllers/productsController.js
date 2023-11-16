@@ -21,8 +21,16 @@ exports.getProductsByID = (req, res) => {
 };
 
 exports.getTotalProducts = (req, res) => {
-  console.log("Menghitung total produk...");
-  con.query("SELECT COUNT(*) AS TotalProducts FROM products", function (
+  console.log("Menghitung total produk... " + req.params.search);
+
+  const search = req.params.search;
+  var query = "SELECT COUNT(*) AS TotalProducts FROM products";
+
+  if (search) {
+    query += " WHERE ProductName LIKE '%" + search + "%'";
+  }
+
+  con.query(query, function (
     err,
     result,
     fields
