@@ -36,13 +36,21 @@ exports.getProductByPage = (req, res) => {
   console.log("Mengambil produk per halaman...");
   const page = req.params.page;
   const limit = req.params.limit;
+  const search = req.params.search;
   const offset = (page - 1) * limit;
-  con.query(
-    "SELECT * FROM products LIMIT " + limit + " OFFSET " + offset,
-    function (err, result, fields) {
-      if (err) throw err;
-      res.json(result);
-    }
-  );
+  var query = "SELECT * FROM products";
+
+
+  if (search) {
+    query += " WHERE ProductName LIKE '%" + search + "%'";
+  }
+  
+  query += " LIMIT " + limit + " OFFSET " + offset;
+  console.log(query);
+
+  con.query(query, function (err, result, fields) {
+    if (err) throw err;
+    res.json(result);
+  });
   
 }; 
