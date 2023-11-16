@@ -67,7 +67,7 @@ exports.getProductByPage = (req, res) => {
   const limit = req.params.limit;
   const search = req.params.search;
   const filter = req.params.filter;
-  const offset = (page - 1) * limit;
+  const offset = Math.max(1, (page - 1) * limit) ;
   var query = "SELECT * FROM products";
 
 
