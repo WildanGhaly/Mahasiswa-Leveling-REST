@@ -44,20 +44,22 @@ exports.getHistory = (req, res) => {
               const queryProduct = `SELECT p.productname as HistoryProductName, p.imagepath as HistoryImagePath FROM products p WHERE p.productid = ?`;
               con.query(queryProduct, [historyItem.product_id], function (err, result, fields) {
                 if (err) throw err;
+
+                console.log(Historyresponse);
             
                 if (result && result.length > 0) {
                   history.push({
-                    HistoryID: historyItem.HistoryID,
-                    HistoryQuantity: historyItem.HistoryQuantity,
-                    HistoryDate: historyItem.HistoryDate,
+                    HistoryID: historyItem.history_id,
+                    HistoryQuantity: historyItem.quantity,
+                    HistoryDate: historyItem.timestamp,
                     HistoryProductName: result[0].HistoryProductName,
                     HistoryImagePath: result[0].HistoryImagePath
                   });
                 } else {
                   history.push({
-                    HistoryID: historyItem.HistoryID,
-                    HistoryQuantity: historyItem.HistoryQuantity,
-                    HistoryDate: historyItem.HistoryDate,
+                    HistoryID: historyItem.history_id,
+                    HistoryQuantity: historyItem.quantit,
+                    HistoryDate: historyItem.timestamp,
                     HistoryProductName: "Product Not Found",
                     HistoryImagePath: "DefaultImagePath"
                   });
@@ -65,6 +67,7 @@ exports.getHistory = (req, res) => {
             
                 if (history.length === Historyresponse.length) {
                   res.json(history);
+                  console.log(history);
                 }
               });
             });
