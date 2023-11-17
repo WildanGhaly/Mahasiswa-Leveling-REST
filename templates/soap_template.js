@@ -71,10 +71,10 @@ const checkCode = {
 
 const uangConverter_soap_template = `<Envelope xmlns="http://schemas.xmlsoap.org/soap/envelope/">
 <Body>
-    <checkCode xmlns="http://service.example.org/">
-        <arg0 xmlns="">%s</arg0>
+    <uangConverter xmlns="http://service.example.org/">
+        <arg0 xmlns="">%d</arg0>
         <arg1 xmlns="">%d</arg1>
-    </checkCode>
+    </uangConverter>
 </Body>
 </Envelope>`;
 
@@ -84,8 +84,20 @@ const uangConverter = {
   template: uangConverter_soap_template
 }
 
+const getCurrencies_soap_template = `<Envelope xmlns="http://schemas.xmlsoap.org/soap/envelope/">
+<Body>
+    <getCurrency xmlns="http://service.example.org/">
+        <arg0 xmlns="">%d</arg0>
+    </getCurrency>
+</Body>
+</Envelope>`
 
+getCurrency = {
+  url: "http://localhost:8081/getCurrency",
+  headers: headers,
+  template: getCurrencies_soap_template
+}
 
-module.exports = { topup, buyProduct, getHistory, checkCode, uangConverter };
+module.exports = { topup, buyProduct, getHistory, checkCode, uangConverter, getCurrency };
 
 
