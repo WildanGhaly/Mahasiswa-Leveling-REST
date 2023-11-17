@@ -26,9 +26,11 @@ exports.getTotalProducts = (req, res) => {
   const search = req.params.search;
   const filter = req.params.filter;
   var query = "SELECT COUNT(*) AS TotalProducts FROM products";
+  var queryParams = [];
 
   if (search) {
-    query += " WHERE ProductName LIKE '%" + search + "%'";
+    query += " WHERE ProductName LIKE ?";
+    queryParams.push('%' + search + '%');
   }
 
   if (search && filter) {
@@ -51,56 +53,50 @@ exports.getTotalProducts = (req, res) => {
     } 
   }
 
-  con.query(query, function (
-    err,
-    result,
-    fields
-  ) {
+  con.query(query, queryParams, function (err, result, fields) {
     if (err) throw err;
     res.json(result);
   });
 };
- 
+
 exports.getProductByPage = (req, res) => {
   console.log("Mengambil produk per halaman...");
-  const page = req.params.page;
-  const limit = req.params.limit;
+  const page = parseInt(req.params.page, 10);
+  const limit = parseInt(req.params.limit, 10);
   const search = req.params.search;
   const filter = req.params.filter;
-  const offset = Math.max(1, (page - 1) * limit) ;
+  const offset = Math.max(0, (page - 1) * limit);
   var query = "SELECT * FROM products";
-
+  var queryParams = [];
 
   if (search) {
-    query += " WHERE ProductName LIKE '%" + search + "%'";
+    query += " WHERE ProductName LIKE ?";
+    queryParams.push('%' + search + '%');
   }
 
   if (search && filter) {
     query += " AND ";
-  }
-
-  if (!search && filter) {
+  } else if (!search && filter) {
     query += " WHERE ";
   }
 
   if (filter) {
-    if (filter == "Available") {
+    if (filter === "Available") {
       query += " stockquantity > 0 ";
-    }
-    else if (filter == "Not Available") {
+    } else if (filter === "Not Available") {
       query += " stockquantity = 0 ";
-    }
-    else {
+    } else {
       query += " stockquantity >= 0 ";
     }
   }
   
-  query += " LIMIT " + limit + " OFFSET " + offset;
+  query += " LIMIT ? OFFSET ?";
+  queryParams.push(limit, offset);
+
   console.log(query);
 
-  con.query(query, function (err, result, fields) {
+  con.query(query, queryParams, function (err, result, fields) {
     if (err) throw err;
     res.json(result);
   });
-  
-}; 
+};
