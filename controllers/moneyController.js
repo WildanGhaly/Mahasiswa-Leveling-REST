@@ -66,6 +66,14 @@ exports.convertMoney = (req, res) => {
     if (!req.isTokenValid) {
         return res.json({ isLoggedIn: false, username: null });
     }
+
+
+    const amounts = req.body.amount;
+
+    if (typeof amounts !== 'number' || !Number.isInteger(amounts) || amounts > 1000000 || amounts < 0) {
+      res.json({ success: false, message: "Invalid amount" });
+      return;
+    }
     
     let username = req.username;
     const query = 'SELECT * FROM users WHERE username = ?';

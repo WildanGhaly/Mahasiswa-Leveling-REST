@@ -12,6 +12,13 @@ exports.updatePoints = (req, res) => {
   }
   // const query = "UPDATE users SET points = points + ? WHERE username = ?";
   let username = req.username;
+  const amounts = req.body.amount;
+
+  if (typeof amounts !== 'number' || !Number.isInteger(amounts) || amounts > 1000000 || amounts < 0) {
+    res.json({ success: false, message: "Invalid amount" });
+    return;
+  }
+    
 
   const query = 'SELECT * FROM users WHERE username = ?';
   con.query(query, [username], function (err, results){
