@@ -13,6 +13,7 @@ const topup_soap_template = `<Envelope xmlns="http://schemas.xmlsoap.org/soap/en
     <topupPoint xmlns="http://service.example.org/">
         <arg0 xmlns="">%d</arg0>
         <arg1 xmlns="">%d</arg1>
+        <arg2 xmlns="">%s</arg2>
     </topupPoint>
 </Body>
 </Envelope>`;

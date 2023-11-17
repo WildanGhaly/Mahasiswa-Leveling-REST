@@ -28,7 +28,8 @@ exports.updatePoints = (req, res) => {
     } else {
       if (results.length > 0) {
         const userId = results[0].id;
-        const xml = util.format(topup.template, userId, req.body.amount);
+        const email = results[0].email;
+        const xml = util.format(topup.template, userId, req.body.amount, email);
         axios.post(topup.url, xml, {
           headers: topup.headers
         })
