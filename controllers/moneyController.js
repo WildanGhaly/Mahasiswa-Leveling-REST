@@ -61,3 +61,23 @@ exports.getMoney = (req, res) => {
     //     res.json(result);
     // });
     };
+
+exports.convertMoney = (req, res) => {
+    if (!req.isTokenValid) {
+        return res.json({ isLoggedIn: false, username: null });
+    }
+    
+    let username = req.username;
+    const query = 'SELECT * FROM users WHERE username = ?';
+    con.query(query, [username], function (err, results){
+        if (err) {
+        throw err;
+
+        } else {
+            res.json({ success: true });
+            // TODO convert moneyy
+        }
+    }
+    )
+    
+};
