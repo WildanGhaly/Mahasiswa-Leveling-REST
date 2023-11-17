@@ -70,10 +70,10 @@ exports.convertMoney = (req, res) => {
 
     const amounts = req.body.amount;
 
-    if (typeof amounts !== 'number' || !Number.isInteger(amounts) || amounts > 1000000 || amounts < 0) {
-      res.json({ success: false, message: "Invalid amount" });
-      return;
-    }
+    // if (typeof amounts !== 'number' || !Number.isInteger(amounts) || amounts > 1000000 || amounts < 0) {
+    //   res.json({ success: false, message: "Invalid amount" });
+    //   return;
+    // }
     
     let username = req.username;
     const query = 'SELECT * FROM users WHERE username = ?';
