@@ -18,7 +18,6 @@ exports.getHistory = (req, res) => {
   con.query(query, [username], function (err, results){
     if (err) {
       throw err;
-
     } else {
       if (results.length > 0) {
         const userId = results[0].id;
@@ -33,7 +32,6 @@ exports.getHistory = (req, res) => {
             if (err) {
               console.error('Error parsing SOAP response:', err);
               throw err;
-             
             }
             const data = result['S:Envelope']['S:Body'][0]['ns2:getHistoryResponse'][0]['return'][0];
             try{
@@ -41,51 +39,41 @@ exports.getHistory = (req, res) => {
             } catch {
               Historyresponse = [];
             }
-            for (let i = 0; i < history.length; i++) {
-              history.push({
-                HistoryID: Historyresponse[i].HistoryID,
+
+            Historyresponse.forEach(historyItem => {
+              const queryProduct = `SELECT p.productname as HistoryProductName, p.imagepath as HistoryImagePath FROM products p WHERE p.productid = ?`;
+              con.query(queryProduct, [historyItem.product_id], function (err, result, fields) {
+                if (err) throw err;
+            
+                if (result && result.length > 0) {
+                  history.push({
+                    HistoryID: historyItem.HistoryID,
+                    HistoryQuantity: historyItem.HistoryQuantity,
+                    HistoryDate: historyItem.HistoryDate,
+                    HistoryProductName: result[0].HistoryProductName,
+                    HistoryImagePath: result[0].HistoryImagePath
+                  });
+                } else {
+                  history.push({
+                    HistoryID: historyItem.HistoryID,
+                    HistoryQuantity: historyItem.HistoryQuantity,
+                    HistoryDate: historyItem.HistoryDate,
+                    HistoryProductName: "Product Not Found",
+                    HistoryImagePath: "DefaultImagePath"
+                  });
+                }
+            
+                if (history.length === Historyresponse.length) {
+                  res.json(history);
+                }
               });
-            }
-            
-            // const querys = `
-            // SELECT h.history_id as HistoryID, h.quantity as HistoryQuantity,
-            //       p.productname as HistoryProductName, h.timestamp as HistoryDate,
-            //       p.imagepath as HistoryImagePath
-            // FROM users u
-            // JOIN history h ON u.id = h.user_id
-            // JOIN products p ON p.productid = h.product_id
-            // WHERE username = ? AND h.history_id IN (${historyIds.map(id => '?').join(',')})`;
-
-            const querys = `
-            SELECT h.history_id as HistoryID, h.quantity as HistoryQuantity,
-                   p.productname as HistoryProductName, h.timestamp as HistoryDate,
-                   p.imagepath as HistoryImagePath
-            FROM users u
-            JOIN history h ON u.id = h.user_id
-            JOIN products p ON p.productid = h.product_id
-            WHERE username = ?`;
-            
-          con.query(querys, [req.username], function (err, result, fields) {
-            if (err) throw err;
-            res.json(result);
-          });
-
-
+            });
           })
         });
-        
-
       } 
       else {
         res.json({ success: false, message: "No user found" });
       }
     }
   })
-
-
-
-
-
-
- 
 };
