@@ -52,7 +52,7 @@ This repository contains the backend for the Mahasiswa Leveling website, impleme
     docker-compose up
     ```
 
-### Folder Structure
+## Folder Structure
 
 1. `controllers/`: Contains the controller logic for handling HTTP requests.
 2. `database/`: Place to manage database configurations and migrations.
@@ -63,7 +63,7 @@ db/: Folder for database models and schemas.
 6. `templates/`: Templates for SOAP services (if required).
 7. `index.js`: Entry point of the application.
 
-### Team Responsibilities
+## Team Responsibilities
 |Feature|13521015|135210025|
 |-------|--------|---------|
 |Initial Project Setup|✔️||
