@@ -77,3 +77,4 @@ db/: Folder for database models and schemas.
 |Merchant|✔️||
 |Products|✔️|✔️|
 |History|✔️|✔️|
+|Template||✔️|
